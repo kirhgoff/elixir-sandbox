@@ -1,7 +1,3 @@
-defmodule Organisation do
-  @derive [Poison.Encoder]
-end
-
 defmodule Elixirsandbox do
   @moduledoc """
   Documentation for Elixirsandbox.
@@ -16,12 +12,13 @@ defmodule Elixirsandbox do
       :world
 
   """
-  def hello do
-    :world
+
+  def main([]) do
+    IO.puts "Provide name of the repository"
   end
 
-  def main(args) do
-    IO.puts "Jobseeker repositories"
+  def main([org_name|_]) do
+    IO.puts "#{org_name} repositories"
     IO.puts "----------------------"
     token = case File.read(Path.expand("~/.github_token")) do
       {:ok, body} -> body
@@ -29,8 +26,16 @@ defmodule Elixirsandbox do
     end
     client = Tentacat.Client.new(%{access_token: String.strip(token)})
     IO.puts "Client is #{inspect(client)}"
-    repos = Tentacat.Repositories.list_orgs("jobseekerltd", client, [type: "private"])
-    names = Enum.map(repos, fn v -> v["name"] end)
+    
+    names = Tentacat.Repositories.list_orgs(org_name, client, [type: "private"])
+            |> Enum.map(&(&1["name"]))
+    Enum.each(names, fn(name) ->
+      map = Tentacat.Repositories.Languages.list(org_name, name, client)
+      Enum.each(map, fn({k, v}) -> IO.puts "#{name}, #{k}, #{v}" end)
+    end)
+    #Enum.flat_map(names, fn name do
+    #  languages =       
+      #end
     IO.puts Enum.join(names, "\n")
     #repos |> Enum.map(Tentacat.Repositories.Languages.list )
 
